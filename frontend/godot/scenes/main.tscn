@@ -1,0 +1,94 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_jyhfs"]
+[ext_resource type="PackedScene" path="res://scenes/highway_segment.tscn" id="2_tbgi4"]
+[ext_resource type="PackedScene" path="res://scenes/runner_rig.tscn" id="3_tefeu"]
+[ext_resource type="Script" path="res://scripts/runner_rig.gd" id="4_o6xl0"]
+
+[sub_resource type="Environment" id="Environment_tipki"]
+background_mode = 1
+background_color = Color(0.024, 0.043, 0.102, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.55, 0.66, 0.88, 1)
+ambient_light_energy = 0.9
+tonemap_mode = 3
+fog_enabled = true
+fog_light_color = Color(0.024, 0.043, 0.102, 1)
+fog_density = 0.012
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_85g3d"]
+albedo_color = Color(0.085, 0.125, 0.2, 1)
+metallic = 0.65
+roughness = 0.35
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_choun"]
+top_radius = 1.45
+bottom_radius = 1.68
+height = 0.16
+radial_segments = 36
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ya4ey"]
+albedo_color = Color(0.06, 0.82, 0.98, 1)
+emission_enabled = true
+emission = Color(0.06, 0.82, 0.98, 1)
+emission_energy_multiplier = 2.4
+
+[sub_resource type="TorusMesh" id="TorusMesh_eb6dy"]
+inner_radius = 1.42
+outer_radius = 1.5
+rings = 36
+ring_segments = 10
+
+[node name="Main" type="Node3D" unique_id=1430353634]
+script = ExtResource("1_jyhfs")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1078425886]
+environment = SubResource("Environment_tipki")
+
+[node name="ChaseCamera" type="Camera3D" parent="." unique_id=239206798]
+transform = Transform3D(1, 0, 0, 0, 0.9919189, 0.12687333, 0, -0.12687333, 0.9919189, 0, 3.6, 5.2)
+current = true
+fov = 65.0
+near = 0.1
+far = 220.0
+
+[node name="KeyLight" type="DirectionalLight3D" parent="." unique_id=1062048871]
+transform = Transform3D(0.88294756, 0.36994863, -0.2890356, 0, 0.6156615, 0.7880107, 0.46947157, -0.6957722, 0.5435968, 0, 0, 0)
+light_color = Color(0.95, 0.98, 1, 1)
+light_energy = 1.35
+
+[node name="RimLight" type="DirectionalLight3D" parent="." unique_id=877176304]
+transform = Transform3D(-0.81915206, -0.26927784, 0.50643796, 0, 0.88294756, 0.46947157, -0.57357645, 0.3845686, -0.72326833, 0, 0, 0)
+light_color = Color(0.28, 0.78, 1, 1)
+light_energy = 0.65
+
+[node name="RoadRoot" type="Node3D" parent="." unique_id=253856269 instance=ExtResource("2_tbgi4")]
+
+[node name="ShowcaseStage" type="Node3D" parent="." unique_id=1832026120]
+visible = false
+
+[node name="Pedestal" type="MeshInstance3D" parent="ShowcaseStage" unique_id=482951780]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08, 0)
+material_override = SubResource("StandardMaterial3D_85g3d")
+mesh = SubResource("CylinderMesh_choun")
+
+[node name="PedestalNeonRing" type="MeshInstance3D" parent="ShowcaseStage" unique_id=976763122]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+material_override = SubResource("StandardMaterial3D_ya4ey")
+mesh = SubResource("TorusMesh_eb6dy")
+
+[node name="ObstaclesRoot" type="Node3D" parent="." unique_id=1864266646]
+
+[node name="GatesRoot" type="Node3D" parent="." unique_id=1049088707]
+
+[node name="ParticlesRoot" type="Node3D" parent="." unique_id=31364067]
+
+[node name="PlayerRig" type="Node3D" parent="." unique_id=1581722359 instance=ExtResource("3_tefeu")]
+script = ExtResource("4_o6xl0")
+
+[node name="OpponentRig" type="Node3D" parent="." unique_id=949947320 instance=ExtResource("3_tefeu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0, -3)
+visible = false
+script = ExtResource("4_o6xl0")
+character_id = "blaze"
+is_rival_runner = true

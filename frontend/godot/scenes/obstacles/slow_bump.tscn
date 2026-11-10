@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f32sy"]
+albedo_color = Color(0.2, 0.17, 0.08, 1)
+roughness = 0.45
+
+[sub_resource type="BoxMesh" id="BoxMesh_qsvov"]
+size = Vector3(1.88, 0.2, 0.72)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jcs4e"]
+albedo_color = Color(0.98, 0.75, 0.14, 1)
+emission_enabled = true
+emission = Color(0.98, 0.68, 0.08, 1)
+emission_energy_multiplier = 1.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_c2q32"]
+size = Vector3(1.76, 0.07, 0.14)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hdx8c"]
+size = Vector3(1.76, 0.07, 0.14)
+
+[node name="SlowBump" type="Node3D" unique_id=1724713187]
+
+[node name="BumpPad" type="MeshInstance3D" parent="." unique_id=1792719885]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+material_override = SubResource("StandardMaterial3D_f32sy")
+mesh = SubResource("BoxMesh_qsvov")
+
+[node name="CautionStripFront" type="MeshInstance3D" parent="." unique_id=2108969787]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21, -0.18)
+material_override = SubResource("StandardMaterial3D_jcs4e")
+mesh = SubResource("BoxMesh_c2q32")
+
+[node name="CautionStripBack" type="MeshInstance3D" parent="." unique_id=218441331]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21, 0.18)
+material_override = SubResource("StandardMaterial3D_jcs4e")
+mesh = SubResource("BoxMesh_hdx8c")

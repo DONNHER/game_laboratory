@@ -1,0 +1,300 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/runner_rig.gd" id="1_rig"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_Shadow"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 0.48)
+
+[sub_resource type="CylinderMesh" id="Mesh_Shadow"]
+top_radius = 0.52
+bottom_radius = 0.52
+height = 0.015
+radial_segments = 18
+
+[sub_resource type="StandardMaterial3D" id="Mat_Joint"]
+albedo_color = Color(0.08, 0.1, 0.16, 1)
+metallic = 0.5
+roughness = 0.42
+
+[sub_resource type="StandardMaterial3D" id="Mat_Suit"]
+albedo_color = Color(0.14, 0.56, 0.96, 1)
+metallic = 0.35
+roughness = 0.36
+
+[sub_resource type="StandardMaterial3D" id="Mat_Armor"]
+albedo_color = Color(0.12, 0.16, 0.28, 1)
+metallic = 0.68
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Mat_VisorGlow"]
+albedo_color = Color(0.32, 0.92, 1, 1)
+roughness = 0.15
+emission_enabled = true
+emission = Color(0.22, 0.88, 1, 1)
+emission_energy_multiplier = 2.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_Flame"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.22, 0.92, 1, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Wing"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.22, 0.92, 1, 0)
+
+[sub_resource type="BoxMesh" id="Mesh_Pelvis"]
+size = Vector3(0.38, 0.18, 0.24)
+
+[sub_resource type="BoxMesh" id="Mesh_Chest"]
+size = Vector3(0.46, 0.52, 0.28)
+
+[sub_resource type="BoxMesh" id="Mesh_ArmorPlate"]
+size = Vector3(0.5, 0.34, 0.31)
+
+[sub_resource type="BoxMesh" id="Mesh_SpineGlow"]
+size = Vector3(0.08, 0.36, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_PackBase"]
+size = Vector3(0.34, 0.3, 0.14)
+
+[sub_resource type="CylinderMesh" id="Mesh_Pod"]
+top_radius = 0.065
+bottom_radius = 0.08
+height = 0.28
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="Mesh_Flame"]
+top_radius = 0.065
+bottom_radius = 0.008
+height = 0.34
+radial_segments = 10
+
+[sub_resource type="BoxMesh" id="Mesh_Wing"]
+size = Vector3(0.78, 0.22, 0.03)
+
+[sub_resource type="SphereMesh" id="Mesh_Helmet"]
+radius = 0.19
+height = 0.38
+radial_segments = 16
+rings = 10
+
+[sub_resource type="BoxMesh" id="Mesh_Visor"]
+size = Vector3(0.32, 0.1, 0.26)
+
+[sub_resource type="BoxMesh" id="Mesh_Crest"]
+size = Vector3(0.06, 0.12, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_Pauldron"]
+size = Vector3(0.18, 0.16, 0.2)
+
+[sub_resource type="BoxMesh" id="Mesh_UpperArm"]
+size = Vector3(0.13, 0.28, 0.13)
+
+[sub_resource type="BoxMesh" id="Mesh_Forearm"]
+size = Vector3(0.12, 0.28, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_CuffGlow"]
+size = Vector3(0.14, 0.06, 0.14)
+
+[sub_resource type="BoxMesh" id="Mesh_Thigh"]
+size = Vector3(0.16, 0.38, 0.17)
+
+[sub_resource type="BoxMesh" id="Mesh_Shin"]
+size = Vector3(0.14, 0.38, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_Boot"]
+size = Vector3(0.16, 0.12, 0.26)
+
+[sub_resource type="BoxMesh" id="Mesh_SoleGlow"]
+size = Vector3(0.165, 0.035, 0.27)
+
+[node name="CustomCharacterTemplate" type="Node3D"]
+script = ExtResource("1_rig")
+character_id = "my_runner"
+preserve_scene_materials = true
+default_wing_alpha = 0.0
+
+[node name="ContactShadow" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
+material_override = SubResource("Mat_Shadow")
+mesh = SubResource("Mesh_Shadow")
+
+[node name="CustomModel" type="Node3D" parent="."]
+
+[node name="BodyPivot" type="Node3D" parent="."]
+
+[node name="Hips" type="Node3D" parent="BodyPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0)
+
+[node name="PelvisMesh" type="MeshInstance3D" parent="BodyPivot/Hips"]
+material_override = SubResource("Mat_Joint")
+mesh = SubResource("Mesh_Pelvis")
+
+[node name="Torso" type="Node3D" parent="BodyPivot/Hips"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+
+[node name="ChestMesh" type="MeshInstance3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28, 0)
+material_override = SubResource("Mat_Suit")
+mesh = SubResource("Mesh_Chest")
+
+[node name="ArmorPlate" type="MeshInstance3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.34, 0)
+material_override = SubResource("Mat_Armor")
+mesh = SubResource("Mesh_ArmorPlate")
+
+[node name="SpineGlow" type="MeshInstance3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0.165)
+material_override = SubResource("Mat_VisorGlow")
+mesh = SubResource("Mesh_SpineGlow")
+
+[node name="PackBase" type="MeshInstance3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.33, 0.18)
+material_override = SubResource("Mat_Joint")
+mesh = SubResource("Mesh_PackBase")
+
+[node name="PodL" type="MeshInstance3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 0.975897, -0.21823, 0, 0.21823, 0.975897, -0.12, 0.31, 0.23)
+material_override = SubResource("Mat_Armor")
+mesh = SubResource("Mesh_Pod")
+
+[node name="PodR" type="MeshInstance3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 0.975897, -0.21823, 0, 0.21823, 0.975897, 0.12, 0.31, 0.23)
+material_override = SubResource("Mat_Armor")
+mesh = SubResource("Mesh_Pod")
+
+[node name="FlameL" type="MeshInstance3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 0.949235, -0.314567, 0, 0.314567, 0.949235, -0.12, 0.12, 0.27)
+material_override = SubResource("Mat_Flame")
+mesh = SubResource("Mesh_Flame")
+
+[node name="FlameR" type="MeshInstance3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 0.949235, -0.314567, 0, 0.314567, 0.949235, 0.12, 0.12, 0.27)
+material_override = SubResource("Mat_Flame")
+mesh = SubResource("Mesh_Flame")
+
+[node name="WingL" type="MeshInstance3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(0.920961, -0.303296, -0.244626, 0.273253, 0.950264, -0.149438, 0.277783, 0.0707821, 0.958033, -0.48, 0.38, 0.22)
+visible = false
+material_override = SubResource("Mat_Wing")
+mesh = SubResource("Mesh_Wing")
+
+[node name="WingR" type="MeshInstance3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(0.920961, 0.303296, 0.244626, -0.273253, 0.950264, -0.149438, -0.277783, 0.0707821, 0.958033, 0.48, 0.38, 0.22)
+visible = false
+material_override = SubResource("Mat_Wing")
+mesh = SubResource("Mesh_Wing")
+
+[node name="HeadPivot" type="Node3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="Helmet" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/HeadPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+material_override = SubResource("Mat_Armor")
+mesh = SubResource("Mesh_Helmet")
+
+[node name="VisorBand" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/HeadPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -0.09)
+material_override = SubResource("Mat_VisorGlow")
+mesh = SubResource("Mesh_Visor")
+
+[node name="Crest" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/HeadPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29, 0.02)
+material_override = SubResource("Mat_VisorGlow")
+mesh = SubResource("Mesh_Crest")
+
+[node name="ArmL" type="Node3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.31, 0.5, 0)
+
+[node name="Pauldron" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03, 0.02, 0)
+material_override = SubResource("Mat_Armor")
+mesh = SubResource("Mesh_Pauldron")
+
+[node name="UpperArm" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.02, -0.15, 0)
+material_override = SubResource("Mat_Suit")
+mesh = SubResource("Mesh_UpperArm")
+
+[node name="Forearm" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 0.939373, -0.342898, 0, 0.342898, 0.939373, -0.02, -0.4, -0.04)
+material_override = SubResource("Mat_Armor")
+mesh = SubResource("Mesh_Forearm")
+
+[node name="CuffGlow" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.02, -0.46, -0.06)
+material_override = SubResource("Mat_VisorGlow")
+mesh = SubResource("Mesh_CuffGlow")
+
+[node name="ArmR" type="Node3D" parent="BodyPivot/Hips/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.31, 0.5, 0)
+
+[node name="Pauldron" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03, 0.02, 0)
+material_override = SubResource("Mat_Armor")
+mesh = SubResource("Mesh_Pauldron")
+
+[node name="UpperArm" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, -0.15, 0)
+material_override = SubResource("Mat_Suit")
+mesh = SubResource("Mesh_UpperArm")
+
+[node name="Forearm" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 0.939373, -0.342898, 0, 0.342898, 0.939373, 0.02, -0.4, -0.04)
+material_override = SubResource("Mat_Armor")
+mesh = SubResource("Mesh_Forearm")
+
+[node name="CuffGlow" type="MeshInstance3D" parent="BodyPivot/Hips/Torso/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, -0.46, -0.06)
+material_override = SubResource("Mat_VisorGlow")
+mesh = SubResource("Mesh_CuffGlow")
+
+[node name="LegL" type="Node3D" parent="BodyPivot/Hips"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, -0.04, 0)
+
+[node name="Thigh" type="MeshInstance3D" parent="BodyPivot/Hips/LegL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+material_override = SubResource("Mat_Suit")
+mesh = SubResource("Mesh_Thigh")
+
+[node name="Shin" type="MeshInstance3D" parent="BodyPivot/Hips/LegL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.56, 0.02)
+material_override = SubResource("Mat_Armor")
+mesh = SubResource("Mesh_Shin")
+
+[node name="Boot" type="MeshInstance3D" parent="BodyPivot/Hips/LegL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.78, -0.03)
+material_override = SubResource("Mat_Joint")
+mesh = SubResource("Mesh_Boot")
+
+[node name="SoleGlow" type="MeshInstance3D" parent="BodyPivot/Hips/LegL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.83, -0.03)
+material_override = SubResource("Mat_VisorGlow")
+mesh = SubResource("Mesh_SoleGlow")
+
+[node name="LegR" type="Node3D" parent="BodyPivot/Hips"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, -0.04, 0)
+
+[node name="Thigh" type="MeshInstance3D" parent="BodyPivot/Hips/LegR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+material_override = SubResource("Mat_Suit")
+mesh = SubResource("Mesh_Thigh")
+
+[node name="Shin" type="MeshInstance3D" parent="BodyPivot/Hips/LegR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.56, 0.02)
+material_override = SubResource("Mat_Armor")
+mesh = SubResource("Mesh_Shin")
+
+[node name="Boot" type="MeshInstance3D" parent="BodyPivot/Hips/LegR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.78, -0.03)
+material_override = SubResource("Mat_Joint")
+mesh = SubResource("Mesh_Boot")
+
+[node name="SoleGlow" type="MeshInstance3D" parent="BodyPivot/Hips/LegR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.83, -0.03)
+material_override = SubResource("Mat_VisorGlow")
+mesh = SubResource("Mesh_SoleGlow")

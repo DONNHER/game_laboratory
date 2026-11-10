@@ -1,0 +1,65 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rvc45"]
+albedo_color = Color(0.14, 0.16, 0.24, 1)
+metallic = 0.65
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_0ag23"]
+size = Vector3(0.18, 2.25, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cyc5a"]
+size = Vector3(0.18, 2.25, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v141q"]
+shading_mode = 0
+albedo_color = Color(1, 0.16, 0.58, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_yowbc"]
+size = Vector3(1.88, 0.09, 0.09)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8je5d"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.24, 0.68, 0.38)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hwlvx"]
+size = Vector3(1.88, 0.22, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ln5cr"]
+size = Vector3(1.88, 0.09, 0.09)
+
+[sub_resource type="BoxMesh" id="BoxMesh_kfmp1"]
+size = Vector3(1.88, 0.22, 0.22)
+
+[node name="Laser" type="Node3D" unique_id=451714343]
+
+[node name="PostLeft" type="MeshInstance3D" parent="." unique_id=1371235248]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.96, 1.125, 0)
+material_override = SubResource("StandardMaterial3D_rvc45")
+mesh = SubResource("BoxMesh_0ag23")
+
+[node name="PostRight" type="MeshInstance3D" parent="." unique_id=1908801074]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.96, 1.125, 0)
+material_override = SubResource("StandardMaterial3D_rvc45")
+mesh = SubResource("BoxMesh_cyc5a")
+
+[node name="PlasmaBeam1" type="MeshInstance3D" parent="." unique_id=258288288]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, 0)
+material_override = SubResource("StandardMaterial3D_v141q")
+mesh = SubResource("BoxMesh_yowbc")
+
+[node name="PlasmaHalo1" type="MeshInstance3D" parent="." unique_id=322834334]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, 0)
+material_override = SubResource("StandardMaterial3D_8je5d")
+mesh = SubResource("BoxMesh_hwlvx")
+
+[node name="PlasmaBeam2" type="MeshInstance3D" parent="." unique_id=1335433525]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.66, 0)
+material_override = SubResource("StandardMaterial3D_v141q")
+mesh = SubResource("BoxMesh_ln5cr")
+
+[node name="PlasmaHalo2" type="MeshInstance3D" parent="." unique_id=73296313]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.66, 0)
+material_override = SubResource("StandardMaterial3D_8je5d")
+mesh = SubResource("BoxMesh_kfmp1")

@@ -1,0 +1,12 @@
+node_modules/
+build/
+dist/
+frontend/dist/
+frontend/android/
+frontend/*.apk
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+frontend/godot/.godot/

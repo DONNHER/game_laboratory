@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tc2kv"]
+albedo_color = Color(0.18, 0.12, 0.28, 1)
+metallic = 0.7
+roughness = 0.24
+
+[sub_resource type="BoxMesh" id="BoxMesh_p1chp"]
+size = Vector3(1.56, 1.24, 0.68)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_31dmq"]
+albedo_color = Color(1, 0.42, 0.12, 1)
+emission_enabled = true
+emission = Color(1, 0.36, 0.08, 1)
+emission_energy_multiplier = 2.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_dloar"]
+size = Vector3(1.62, 0.22, 0.72)
+
+[sub_resource type="TorusMesh" id="TorusMesh_urdt5"]
+inner_radius = 0.45
+outer_radius = 0.58
+rings = 16
+ring_segments = 8
+
+[node name="MovingBlock" type="Node3D" unique_id=815927811]
+
+[node name="DroneHull" type="MeshInstance3D" parent="." unique_id=50385764]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.74, 0)
+material_override = SubResource("StandardMaterial3D_tc2kv")
+mesh = SubResource("BoxMesh_p1chp")
+
+[node name="CoreBand" type="MeshInstance3D" parent="." unique_id=448636986]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.74, 0)
+material_override = SubResource("StandardMaterial3D_31dmq")
+mesh = SubResource("BoxMesh_dloar")
+
+[node name="HoverThrusterRing" type="MeshInstance3D" parent="." unique_id=1532293059]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+material_override = SubResource("StandardMaterial3D_31dmq")
+mesh = SubResource("TorusMesh_urdt5")

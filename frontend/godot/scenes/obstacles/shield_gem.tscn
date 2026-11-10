@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qtj32"]
+albedo_color = Color(0.12, 0.92, 1, 1)
+roughness = 0.1
+emission_enabled = true
+emission = Color(0.06, 0.85, 1, 1)
+emission_energy_multiplier = 2.6
+
+[sub_resource type="SphereMesh" id="SphereMesh_dobv4"]
+radius = 0.42
+height = 0.92
+radial_segments = 4
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6qmec"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.45, 0.97, 1, 0.82)
+
+[sub_resource type="TorusMesh" id="TorusMesh_iw17b"]
+inner_radius = 0.56
+outer_radius = 0.63
+rings = 20
+ring_segments = 8
+
+[node name="ShieldGem" type="Node3D" unique_id=793256045]
+
+[node name="SpinPivot" type="Node3D" parent="." unique_id=47925951]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.08, 0)
+
+[node name="ShieldCrystal" type="MeshInstance3D" parent="SpinPivot" unique_id=2118061790]
+material_override = SubResource("StandardMaterial3D_qtj32")
+mesh = SubResource("SphereMesh_dobv4")
+
+[node name="OrbitRingA" type="MeshInstance3D" parent="SpinPivot" unique_id=346713281]
+transform = Transform3D(0.921061, -0.38941833, 0, 0.29784358, 0.70446634, -0.64421767, 0.25087017, 0.59336376, 0.7648422, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_6qmec")
+mesh = SubResource("TorusMesh_iw17b")
+
+[node name="OrbitRingB" type="MeshInstance3D" parent="SpinPivot" unique_id=666943677]
+transform = Transform3D(0.94604677, 0.12761132, 0.29784358, -0.29784358, 0.70446634, 0.64421767, -0.12761131, -0.6981709, 0.70446634, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_6qmec")
+mesh = SubResource("TorusMesh_iw17b")

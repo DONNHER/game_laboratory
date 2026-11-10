@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wrml3"]
+albedo_color = Color(1, 0.84, 0.18, 1)
+metallic = 0.55
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.76, 0.1, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="TorusMesh" id="TorusMesh_asb15"]
+inner_radius = 0.24
+outer_radius = 0.4
+rings = 18
+ring_segments = 10
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d8g7e"]
+shading_mode = 0
+albedo_color = Color(0.35, 0.96, 1, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_53klv"]
+radius = 0.17
+height = 0.34
+radial_segments = 4
+rings = 1
+
+[node name="Coin" type="Node3D" unique_id=1101183343]
+
+[node name="SpinPivot" type="Node3D" parent="." unique_id=1973172704]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0)
+
+[node name="OuterGoldRing" type="MeshInstance3D" parent="SpinPivot" unique_id=1141604843]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_wrml3")
+mesh = SubResource("TorusMesh_asb15")
+
+[node name="InnerCoreGem" type="MeshInstance3D" parent="SpinPivot" unique_id=1709610374]
+material_override = SubResource("StandardMaterial3D_d8g7e")
+mesh = SubResource("SphereMesh_53klv")

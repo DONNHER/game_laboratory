@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0" />
+    <title>Maze Runner · Godot 4.7 3D Engine</title>
+    <style>
+      html,
+      body,
+      #canvas {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        width: 100%;
+        height: 100%;
+      }
+      body {
+        background-color: #060b1a;
+        overflow: hidden;
+        touch-action: none;
+        user-select: none;
+      }
+      #canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+      // Guard third-party cross-origin iframe APIs (e.g. ServiceWorker in partitioned iframes)
+      // so Godot's internal PWA probe never emits an unhandled SecurityError rejection.
+      (function () {
+        try {
+          if (typeof navigator !== 'undefined' && navigator.serviceWorker) {
+            var origGetReg = navigator.serviceWorker.getRegistration;
+            if (typeof origGetReg === 'function') {
+              navigator.serviceWorker.getRegistration = function () {
+                try {
+                  return Promise.resolve(origGetReg.apply(navigator.serviceWorker, arguments)).catch(
+                    function () {
+                      return undefined;
+                    }
+                  );
+                } catch (_swErr) {
+                  return Promise.resolve(undefined);
+                }
+              };
+            }
+          }
+        } catch (_ignoreSwAccess) {
+          // Ignore restricted navigator.serviceWorker getter in sandboxed/third-party iframes
+        }
+      })();
+    </script>
+    <script src="./maze_runner.js"></script>
+    <script>
+      (function () {
+        var EXPECTED_WASM_SIZE = 39514754;
+        var EXPECTED_PCK_SIZE = 207412;
+        var EXPECTED_TOTAL_BYTES = EXPECTED_WASM_SIZE + EXPECTED_PCK_SIZE;
+
+        var reactListener = null;
+        var isGodotReady = false;
+        var hasErrored = false;
+        var eventSeq = 0;
+        var pendingQueue = [];
+        var maxReportedPct = 0;
+        var inactivityTimer = null;
+
+        var cachedWasmBuffer = null;
+        var cachedPckBuffer = null;
+
+        // Ensure requestAnimationFrame still ticks during boot even if the browser throttles
+        // an occluded cross-origin iframe while the loading screen overlay is visible.
+        var nativeRAF = window.requestAnimationFrame
+          ? window.requestAnimationFrame.bind(window)
+          : null;
+        if (nativeRAF) {
+          window.requestAnimationFrame = function (callback) {
+            if (isGodotReady) {
+              return nativeRAF(callback);
+            }
+            var fired = false;
+            var fallbackId = window.setTimeout(function () {
+              if (!fired) {
+                fired = true;
+                callback(performance.now());
+              }
+            }, 32);
+            nativeRAF(function (ts) {
+              if (!fired) {
+                fired = true;
+                window.clearTimeout(fallbackId);
+                callback(ts);
+              }
+            });
+            return fallbackId;
+          };
+        }
+
+        var bootState = {
+          status: 'booting',
+          lastProgress: {
+            type: 'boot_progress',
+            pct: 2,
+            current: 0,
+            total: EXPECTED_TOTAL_BYTES,
+            phase: 'connect',
+          },
+          readyPayload: null,
+          errorPayload: null,
+        };
+
+        function clearInactivityWatchdog() {
+          if (inactivityTimer !== null) {
+            window.clearTimeout(inactivityTimer);
+            inactivityTimer = null;
+          }
+        }
+
+        function touchInactivityWatchdog() {
+          if (isGodotReady || hasErrored) return;
+          clearInactivityWatchdog();
+          inactivityTimer = window.setTimeout(function () {
+            if (!isGodotReady && !hasErrored) {
+              reportBootError(
+                'Connection timed out while loading Godot 4.7 3D Engine. Click Retry to reload.'
+              );
+            }
+          }, 45000);
+        }
+
+        function emitEvent(payloadObj) {
+          var payload =
+            typeof payloadObj === 'string' ? JSON.parse(payloadObj) : payloadObj;
+
+          if (payload && payload.type === 'boot_progress') {
+            if (typeof payload.pct === 'number') {
+              if (payload.pct < maxReportedPct) {
+                payload.pct = maxReportedPct;
+              } else {
+                maxReportedPct = payload.pct;
+              }
+            }
+            bootState.lastProgress = payload;
+          } else if (payload && payload.type === 'ready') {
+            clearInactivityWatchdog();
+            bootState.status = 'ready';
+            bootState.readyPayload = payload;
+          } else if (payload && payload.type === 'boot_error') {
+            clearInactivityWatchdog();
+            bootState.status = 'error';
+            bootState.errorPayload = payload;
+          }
+
+          var seq = ++eventSeq;
+          var envelope = JSON.stringify({
+            __envelope: true,
+            seq: seq,
+            payload: payload,
+          });
+
+          if (reactListener) {
+            try {
+              reactListener(envelope);
+            } catch (_err) {
+              // Ignore listener exception
+            }
+          }
+
+          try {
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage(
+                {
+                  source: 'maze_runner_godot',
+                  seq: seq,
+                  payload: payload,
+                  envelope: envelope,
+                },
+                '*'
+              );
+            }
+          } catch (_postErr) {
+            // Safe cross-frame fallback
+          }
+        }
+
+        function reportBootError(reason) {
+          if (isGodotReady || hasErrored) return;
+          hasErrored = true;
+          clearInactivityWatchdog();
+          var msg = 'Godot 4.7 3D initialization failed';
+          if (reason && typeof reason === 'object' && reason.message) {
+            msg = String(reason.message);
+          } else if (typeof reason === 'string' && reason.trim()) {
+            msg = reason.trim();
+          }
+          emitEvent({
+            type: 'boot_error',
+            message: msg,
+          });
+        }
+
+        window.addEventListener('error', function (ev) {
+          if (isGodotReady || hasErrored) return;
+          var errMsg = ev && ev.message ? String(ev.message) : '';
+          if (/ResizeObserver|Script error/i.test(errMsg)) return;
+          if (errMsg) {
+            reportBootError(errMsg);
+          }
+        });
+
+        window.addEventListener('unhandledrejection', function (ev) {
+          if (isGodotReady || hasErrored) return;
+          var reason = ev ? ev.reason : null;
+          var msg =
+            reason && typeof reason === 'object' && reason.message
+              ? String(reason.message)
+              : typeof reason === 'string'
+              ? reason
+              : '';
+          if (/serviceWorker|SecurityError|ResizeObserver/i.test(msg)) return;
+          if (msg) {
+            reportBootError(msg);
+          }
+        });
+
+        window.__attachReactBridge = function (listenerFn) {
+          reactListener = listenerFn;
+          var replayPayload =
+            bootState.status === 'ready'
+              ? bootState.readyPayload
+              : bootState.status === 'error'
+              ? bootState.errorPayload
+              : bootState.lastProgress;
+          if (replayPayload) {
+            var replayEnvelope = JSON.stringify({
+              __envelope: true,
+              seq: 0,
+              payload: replayPayload,
+            });
+            try {
+              reactListener(replayEnvelope);
+            } catch (_e) {
+              // Ignore replay error
+            }
+          }
+        };
+
+        window.__sendToGodot = function (jsonStr) {
+          if (isGodotReady && typeof window.__godotReceiveCommand === 'function') {
+            window.__godotReceiveCommand(jsonStr);
+          } else {
+            pendingQueue.push(jsonStr);
+          }
+        };
+
+        window.__MazeRunnerHost = {
+          onGodotEvent: function (jsonStr) {
+            try {
+              var parsed = JSON.parse(jsonStr);
+              if (parsed && parsed.type === 'ready') {
+                isGodotReady = true;
+                clearInactivityWatchdog();
+                emitEvent(parsed);
+                while (
+                  pendingQueue.length > 0 &&
+                  typeof window.__godotReceiveCommand === 'function'
+                ) {
+                  window.__godotReceiveCommand(pendingQueue.shift());
+                }
+                return;
+              }
+              emitEvent(parsed);
+            } catch (_e) {
+              // Ignore malformed event
+            }
+          },
+        };
+
+        try {
+          if (window.parent && typeof window.parent.__onGodotHostMounted === 'function') {
+            window.parent.__onGodotHostMounted(window);
+          }
+        } catch (_mountErr) {
+          // Parent will still receive postMessage events
+        }
+
+        emitEvent({
+          type: 'boot_progress',
+          pct: 2,
+          current: 0,
+          total: EXPECTED_TOTAL_BYTES,
+          phase: 'connect',
+        });
+
+        function decodeBase64Bytes(b64) {
+          var binStr = window.atob(b64);
+          var len = binStr.length;
+          var bytes = new Uint8Array(len);
+          for (var i = 0; i < len; i++) {
+            bytes[i] = binStr.charCodeAt(i);
+          }
+          return bytes;
+        }
+
+        function loadScriptAsset(src, attemptsLeft) {
+          touchInactivityWatchdog();
+          return new Promise(function (resolve, reject) {
+            var script = document.createElement('script');
+            script.async = true;
+            script.src = src;
+            script.onload = function () {
+              touchInactivityWatchdog();
+              if (script.parentNode) {
+                script.parentNode.removeChild(script);
+              }
+              resolve();
+            };
+            script.onerror = function () {
+              if (script.parentNode) {
+                script.parentNode.removeChild(script);
+              }
+              if (attemptsLeft > 1) {
+                window.setTimeout(function () {
+                  var retryUrl =
+                    src + (src.indexOf('?') === -1 ? '?' : '&') + 'retry=' + attemptsLeft;
+                  loadScriptAsset(retryUrl, attemptsLeft - 1).then(resolve, reject);
+                }, 350);
+                return;
+              }
+              reject(new Error('Failed to download 3D engine script chunk: ' + src));
+            };
+            document.head.appendChild(script);
+          });
+        }
+
+        function decompressGzipBytes(gzCombined, expectedRawSize) {
+          if (typeof DecompressionStream !== 'function') {
+            return Promise.reject(
+              new Error('Browser does not support DecompressionStream for WebAssembly')
+            );
+          }
+          var decompressedStream = new Blob([gzCombined])
+            .stream()
+            .pipeThrough(new DecompressionStream('gzip'));
+          var reader = decompressedStream.getReader();
+
+          if (expectedRawSize > 0) {
+            var out = new Uint8Array(expectedRawSize);
+            var offset = 0;
+            var overflowParts = null;
+
+            function pumpKnown() {
+              return reader.read().then(function (step) {
+                if (step.done) {
+                  if (!overflowParts) {
+                    return offset === out.byteLength
+                      ? out.buffer
+                      : out.buffer.slice(0, offset);
+                  }
+                  var full = new Uint8Array(offset);
+                  full.set(out.subarray(0, Math.min(offset, out.byteLength)), 0);
+                  var cur = out.byteLength;
+                  for (var j = 0; j < overflowParts.length; j++) {
+                    full.set(overflowParts[j], cur);
+                    cur += overflowParts[j].byteLength;
+                  }
+                  return full.buffer;
+                }
+                var chunk = step.value;
+                if (chunk && chunk.byteLength > 0) {
+                  if (!overflowParts && offset + chunk.byteLength <= out.byteLength) {
+                    out.set(chunk, offset);
+                  } else {
+                    if (!overflowParts) {
+                      overflowParts = [];
+                      var fit = Math.max(0, out.byteLength - offset);
+                      if (fit > 0) {
+                        out.set(chunk.subarray(0, fit), offset);
+                      }
+                      if (chunk.byteLength > fit) {
+                        overflowParts.push(chunk.subarray(fit));
+                      }
+                    } else {
+                      overflowParts.push(chunk);
+                    }
+                  }
+                  offset += chunk.byteLength;
+                }
+                return pumpKnown();
+              });
+            }
+
+            return pumpKnown();
+          }
+
+          var parts = [];
+          var total = 0;
+          function pumpUnknown() {
+            return reader.read().then(function (step) {
+              if (step.done) {
+                var merged = new Uint8Array(total);
+                var pos = 0;
+                for (var i = 0; i < parts.length; i++) {
+                  merged.set(parts[i], pos);
+                  pos += parts[i].byteLength;
+                }
+                return merged.buffer;
+              }
+              if (step.value && step.value.byteLength > 0) {
+                parts.push(step.value);
+                total += step.value.byteLength;
+              }
+              return pumpUnknown();
+            });
+          }
+          return pumpUnknown();
+        }
+
+        // Load manifest, .pck, and all 20 WASM chunks exclusively via <script src="..."> tags!
+        // Unlike window.fetch(), <script> subresources bypass ServiceWorker fetch deadlocks in
+        // cross-origin preview iframes AND work 100% offline inside Capacitor Android APKs.
+        function preloadAllEngineBinariesViaScripts() {
+          touchInactivityWatchdog();
+          var cacheBust = '?t=' + Date.now();
+
+          return loadScriptAsset('./wasm/manifest.js' + cacheBust, 3)
+            .then(function () {
+              var manifest = window.__GODOT_WASM_MANIFEST;
+              if (!manifest || !manifest.jsChunks || !manifest.jsChunks.length) {
+                throw new Error('Godot 4.7 WASM manifest failed to initialize');
+              }
+
+              EXPECTED_WASM_SIZE = manifest.rawSize || EXPECTED_WASM_SIZE;
+              EXPECTED_PCK_SIZE = manifest.pckSize || EXPECTED_PCK_SIZE;
+              EXPECTED_TOTAL_BYTES = EXPECTED_WASM_SIZE + EXPECTED_PCK_SIZE;
+
+              emitEvent({
+                type: 'boot_progress',
+                pct: 4,
+                phase: 'download',
+              });
+
+              return loadScriptAsset('./wasm/pck_bundle.js' + cacheBust, 3).then(function () {
+                if (typeof window.__GODOT_PCK_B64 !== 'string' || !window.__GODOT_PCK_B64.length) {
+                  throw new Error('Godot 4.7 scene pack (pck_bundle.js) failed to load');
+                }
+                var pckBytes = decodeBase64Bytes(window.__GODOT_PCK_B64);
+                window.__GODOT_PCK_B64 = null;
+
+                if (
+                  pckBytes.byteLength < 4 ||
+                  pckBytes[0] !== 0x47 ||
+                  pckBytes[1] !== 0x44 ||
+                  pckBytes[2] !== 0x50 ||
+                  pckBytes[3] !== 0x43
+                ) {
+                  throw new Error('Invalid Godot 4.7 PCK header');
+                }
+
+                cachedPckBuffer = pckBytes.buffer;
+
+                emitEvent({
+                  type: 'boot_progress',
+                  pct: 7,
+                  phase: 'download',
+                });
+
+                return manifest;
+              });
+            })
+            .then(function (manifest) {
+              var jsChunks = manifest.jsChunks;
+              var totalChunks = jsChunks.length;
+              var completedBuffers = new Array(totalChunks);
+              var totalGzBytes = 0;
+              var loadedCount = 0;
+
+              return new Promise(function (resolveChunks, rejectChunks) {
+                var CONCURRENCY = 4;
+                var nextIdx = 0;
+                var active = 0;
+                var aborted = false;
+
+                window.__receiveGodotWasmChunk = function (chunkIdx, b64Data) {
+                  if (aborted) return;
+                  try {
+                    var bytes = decodeBase64Bytes(b64Data);
+                    completedBuffers[chunkIdx] = bytes;
+                    totalGzBytes += bytes.byteLength;
+                  } catch (decodeErr) {
+                    aborted = true;
+                    rejectChunks(decodeErr);
+                  }
+                };
+
+                function scheduleNext() {
+                  while (!aborted && active < CONCURRENCY && nextIdx < totalChunks) {
+                    (function (idx) {
+                      var fileName = jsChunks[idx];
+                      active++;
+                      loadScriptAsset('./wasm/' + fileName, 3)
+                        .then(function () {
+                          if (aborted) return;
+                          if (!completedBuffers[idx]) {
+                            throw new Error('Chunk payload missing for ' + fileName);
+                          }
+                          active--;
+                          loadedCount++;
+
+                          var pct = Math.min(
+                            85,
+                            Math.round(7 + (loadedCount / totalChunks) * 78)
+                          );
+                          emitEvent({
+                            type: 'boot_progress',
+                            pct: pct,
+                            phase: 'download',
+                          });
+
+                          if (loadedCount >= totalChunks) {
+                            window.__receiveGodotWasmChunk = null;
+                            resolveChunks({
+                              buffers: completedBuffers,
+                              totalGzBytes: totalGzBytes,
+                              rawSize: manifest.rawSize || EXPECTED_WASM_SIZE,
+                            });
+                            return;
+                          }
+                          scheduleNext();
+                        })
+                        .catch(function (err) {
+                          if (aborted) return;
+                          aborted = true;
+                          window.__receiveGodotWasmChunk = null;
+                          rejectChunks(err);
+                        });
+                    })(nextIdx++);
+                  }
+                }
+
+                scheduleNext();
+              });
+            })
+            .then(function (result) {
+              touchInactivityWatchdog();
+              emitEvent({
+                type: 'boot_progress',
+                pct: 87,
+                phase: 'decompress',
+              });
+
+              var gzCombined = new Uint8Array(result.totalGzBytes);
+              var offset = 0;
+              for (var i = 0; i < result.buffers.length; i++) {
+                var part = result.buffers[i];
+                gzCombined.set(part, offset);
+                offset += part.byteLength;
+                result.buffers[i] = null;
+              }
+
+              return decompressGzipBytes(gzCombined, result.rawSize).then(function (rawAb) {
+                var magic = new Uint8Array(rawAb, 0, Math.min(4, rawAb.byteLength));
+                if (
+                  magic.byteLength < 4 ||
+                  magic[0] !== 0x00 ||
+                  magic[1] !== 0x61 ||
+                  magic[2] !== 0x73 ||
+                  magic[3] !== 0x6d
+                ) {
+                  throw new Error('Unpacked Godot binary is not a valid WebAssembly module');
+                }
+                cachedWasmBuffer = rawAb;
+                emitEvent({
+                  type: 'boot_progress',
+                  pct: 91,
+                  phase: 'compile',
+                });
+              });
+            });
+        }
+
+        // Compile WebAssembly directly from the in-memory ArrayBuffer with explicit error propagation
+        if (typeof WebAssembly === 'object') {
+          WebAssembly.instantiateStreaming = function (source, importObject) {
+            return Promise.resolve(source)
+              .then(function (resp) {
+                return resp.arrayBuffer();
+              })
+              .then(function (buf) {
+                emitEvent({
+                  type: 'boot_progress',
+                  pct: 93,
+                  phase: 'compile',
+                });
+                return WebAssembly.instantiate(buf, importObject);
+              })
+              .catch(function (err) {
+                reportBootError(err);
+                throw err;
+              });
+          };
+        }
+
+        // Serve preloaded .wasm and .pck buffers 100% from RAM so Godot's Preloader never hits network fetch()
+        var origFetch = window.fetch.bind(window);
+        window.fetch = function (input, init) {
+          var urlStr =
+            typeof input === 'string'
+              ? input
+              : input && typeof input.url === 'string'
+              ? input.url
+              : '';
+
+          if (/maze_runner\.wasm(\?|$)/.test(urlStr) && cachedWasmBuffer) {
+            return Promise.resolve(
+              new Response(cachedWasmBuffer.slice(0), {
+                status: 200,
+                headers: {
+                  'Content-Type': 'application/wasm',
+                  'Content-Length': String(cachedWasmBuffer.byteLength),
+                },
+              })
+            );
+          }
+
+          if (/maze_runner\.pck(\?|$)/.test(urlStr) && cachedPckBuffer) {
+            return Promise.resolve(
+              new Response(cachedPckBuffer.slice(0), {
+                status: 200,
+                headers: {
+                  'Content-Type': 'application/octet-stream',
+                  'Content-Length': String(cachedPckBuffer.byteLength),
+                },
+              })
+            );
+          }
+
+          return origFetch(input, init);
+        };
+
+        if (typeof Engine === 'undefined') {
+          reportBootError(
+            'Failed to load Godot 4.7 loader (maze_runner.js). Ensure the app server is running.'
+          );
+          return;
+        }
+
+        var missing = Engine.getMissingFeatures({ threads: false });
+        if (missing.length > 0) {
+          reportBootError('Missing browser WebGL2/WASM support: ' + missing.join(', '));
+          return;
+        }
+
+        preloadAllEngineBinariesViaScripts()
+          .then(function () {
+            touchInactivityWatchdog();
+
+            var GODOT_CONFIG = {
+              args: ['--audio-driver', 'Dummy'],
+              canvasResizePolicy: 2,
+              emscriptenPoolSize: 8,
+              ensureCrossOriginIsolationHeaders: false,
+              executable: 'maze_runner',
+              experimentalVK: false,
+              fileSizes: {
+                'maze_runner.pck': cachedPckBuffer ? cachedPckBuffer.byteLength : EXPECTED_PCK_SIZE,
+                'maze_runner.wasm': cachedWasmBuffer
+                  ? cachedWasmBuffer.byteLength
+                  : EXPECTED_WASM_SIZE,
+              },
+              focusCanvas: false,
+              gdextensionLibs: [],
+              godotPoolSize: 4,
+              persistentPaths: [],
+              onExit: function (code) {
+                if (!isGodotReady && code !== 0) {
+                  reportBootError('Godot 4.7 exited unexpectedly during startup (code ' + code + ')');
+                }
+              },
+            };
+
+            var engine = new Engine(GODOT_CONFIG);
+            return engine.startGame().then(function () {
+              if (!isGodotReady && !hasErrored) {
+                emitEvent({
+                  type: 'boot_progress',
+                  pct: 96,
+                  phase: 'scene',
+                });
+              }
+            });
+          })
+          .catch(function (err) {
+            reportBootError(err);
+          });
+      })();
+    </script>
+  </body>
+</html>

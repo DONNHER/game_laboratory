@@ -1,0 +1,38 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sehmg"]
+albedo_color = Color(0.12, 0.15, 0.22, 1)
+metallic = 0.6
+roughness = 0.32
+
+[sub_resource type="BoxMesh" id="BoxMesh_fdlmw"]
+size = Vector3(1.88, 1.18, 0.56)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_amwi0"]
+albedo_color = Color(0.96, 0.24, 0.34, 1)
+emission_enabled = true
+emission = Color(0.98, 0.2, 0.32, 1)
+emission_energy_multiplier = 2.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_2jsn7"]
+size = Vector3(1.94, 0.14, 0.62)
+
+[sub_resource type="BoxMesh" id="BoxMesh_uor2m"]
+size = Vector3(1.72, 0.12, 0.6)
+
+[node name="Wall" type="Node3D" unique_id=1077938730]
+
+[node name="BarrierBody" type="MeshInstance3D" parent="." unique_id=2035529943]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.59, 0)
+material_override = SubResource("StandardMaterial3D_sehmg")
+mesh = SubResource("BoxMesh_fdlmw")
+
+[node name="TopNeonBar" type="MeshInstance3D" parent="." unique_id=748889758]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.16, 0)
+material_override = SubResource("StandardMaterial3D_amwi0")
+mesh = SubResource("BoxMesh_2jsn7")
+
+[node name="HazardStripe" type="MeshInstance3D" parent="." unique_id=547583873]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, 0)
+material_override = SubResource("StandardMaterial3D_amwi0")
+mesh = SubResource("BoxMesh_uor2m")

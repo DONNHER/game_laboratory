@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat_BaseFrame"]
+albedo_color = Color(0.11, 0.14, 0.22, 1)
+metallic = 0.65
+roughness = 0.28
+
+[sub_resource type="StandardMaterial3D" id="Mat_NeonCore"]
+albedo_color = Color(0.12, 0.88, 1, 1)
+roughness = 0.15
+emission_enabled = true
+emission = Color(0.08, 0.78, 1, 1)
+emission_energy_multiplier = 2.4
+
+[sub_resource type="BoxMesh" id="Mesh_Pedestal"]
+size = Vector3(1.76, 0.22, 0.56)
+
+[sub_resource type="PrismMesh" id="Mesh_CrystalSpike"]
+size = Vector3(1.5, 0.96, 0.42)
+
+[sub_resource type="TorusMesh" id="Mesh_HoloRing"]
+inner_radius = 0.52
+outer_radius = 0.6
+rings = 20
+ring_segments = 8
+
+[node name="CustomObstacleTemplate" type="Node3D"]
+
+[node name="BasePedestal" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
+material_override = SubResource("Mat_BaseFrame")
+mesh = SubResource("Mesh_Pedestal")
+
+[node name="HazardSpike" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+material_override = SubResource("Mat_NeonCore")
+mesh = SubResource("Mesh_CrystalSpike")
+
+[node name="SpinPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+
+[node name="HoloRing" type="MeshInstance3D" parent="SpinPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, -0.5, 0, 0.5, 0.866025, 0, 0, 0)
+material_override = SubResource("Mat_NeonCore")
+mesh = SubResource("Mesh_HoloRing")

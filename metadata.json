@@ -1,0 +1,6 @@
+{
+  "name": "Maze Runner - React & Laravel Edition",
+  "description": "Mobile 3-lane maze runner game with seeded road generation, offline solo campaign with 5 levels, AI rival mode, room-code multiplayer, and interactive lab documentation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
